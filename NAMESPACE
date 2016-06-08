@@ -1,0 +1,11 @@
+useDynLib(jtGWAS)
+exportPattern("^[[:alpha:]]+")
+exportPattern("^[^\\.]")
+S3method(summary, jtGWAS)
+importFrom(Rcpp, evalCpp)
+importFrom("stats", "pnorm")
+
+
+
+
+
