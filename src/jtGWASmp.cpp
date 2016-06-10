@@ -5,12 +5,13 @@
 					/*  parallel version with openMP*/
 					/*	03/28/2016                  */
 					/********************************/
-
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 #include <Rcpp.h>
 #include <unordered_map>
 #include <unordered_set>
 #include <list>
-#include <omp.h>
 #include "pairCompareMP.h"
 #include "JTscoreMP.h"
 
@@ -46,8 +47,12 @@ Rcpp::List jtGWASmp(Rcpp::NumericMatrix X, Rcpp::NumericMatrix Y,
 	Rcpp::List JTtestRes; 	
 			
 	// Outer loop for markers.
+	#ifdef _OPENMP
 	omp_set_num_threads(numThreads); // define number of threads.	
+	#endif
+	#ifdef _OPENMP
 	#pragma omp parallel for 
+	#endif
 	for(int curMarker = 0; curMarker < numMarker; curMarker++){ 
 
 		int		outcount	= 0;   		// output size control
@@ -240,7 +245,9 @@ Rcpp::List jtGWASmp(Rcpp::NumericMatrix X, Rcpp::NumericMatrix Y,
 			// Store the Jstat value and in euqal count for current marker and current g-
 			// ene snip
 			JTscoreMP js(Jstar, nonEqCount+0.5*eqCount, curGSnip);		
+			#ifdef _OPENMP
 			#pragma omp critical
+			#endif
 			{            
 				if (outcount < outItemNo){	
                 	// sort and store the top N results JT test in a list.

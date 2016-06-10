@@ -1,0 +1,5 @@
+jtGWAS v1.01 (Release date: 2016-06-09)
+=============
+* Fix bug to prevent using omp.h header when OpenMP is not available.
+* Fix bug in JTscore.h to prevent warnings of "'__JTSCORE_H__' is used as a header guard here, followed by #define of a different macro" when using clang++.
+

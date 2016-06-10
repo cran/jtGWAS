@@ -11,8 +11,8 @@
 \tabular{ll}{
 Package: \tab jtGWAS\cr
 Type: \tab Package\cr
-Version: \tab 1.0\cr
-Date: \tab 2016-06-08\cr
+Version: \tab 1.1\cr
+Date: \tab 2016-06-10\cr
 License: \tab GPL-3\cr
 }
 Please see the example function calls below, or refer to the individual function documentation or the included vignette for more information. The package vignette serves as a tutorial for using this package. The technical details are provided in the reference cited below. Specifically, the calculation of the standardized test statistic employs the null variance equation as defined by Hollander and Wolfe (1999, eq. 6.19) to account for ties in the data.

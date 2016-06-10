@@ -1,5 +1,5 @@
 #ifndef __JTSCORE_H__
-#define __JTSCORE_H_
+#define __JTSCORE_H__
 
 // class to store the results
 
