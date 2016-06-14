@@ -252,8 +252,17 @@ Rcpp::List jtGWASmp(Rcpp::NumericMatrix X, Rcpp::NumericMatrix Y,
 				if (outcount < outItemNo){	
                 	// sort and store the top N results JT test in a list.
                 	it = jTScoreTopN.begin();
-                	while(abs(Jstar) <= abs((*it).getJStar()) && it!= jTScoreTopN.end())
-                   		it++;
+                	//while(abs(Jstar) <= abs((*it).getJStar()) && it!= jTScoreTopN.end())
+                   	//	it++;
+					//************************//
+					// fix to remove the stack overflow error
+					while(it!= jTScoreTopN.end())
+					{
+						if(abs(Jstar) <= abs((*it).getJStar()))
+							it++;
+						else
+							break;
+					}
                 	jTScoreTopN.insert(it,js);
 					outcount++;
             	}else{

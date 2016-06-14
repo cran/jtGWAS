@@ -281,8 +281,17 @@ Rcpp::List jtGWAS(Rcpp::NumericMatrix X, Rcpp::NumericMatrix Y,
 										   //insert position step.
 					continue;
 				}else{
-               		while((abs(Jstar) <= abs((*it).getJStar())) && (it!= jTScoreTopN.end()))
-                   	{it++;}   			// find the insert postion
+               		//while((abs(Jstar) <= abs((*it).getJStar())) && (it!= jTScoreTopN.end()))
+                   	//{it++;}   			// find the insert postion
+					//*****************************//
+					// fix to remove the stack overflow error
+					while(it!= jTScoreTopN.end())
+					{
+						if(abs(Jstar) <= abs((*it).getJStar()))
+							it++;
+						else
+							break;
+					}
                
 					jTScoreTopN.insert(it,js); //insert the new result item
 					continue;
