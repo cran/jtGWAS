@@ -35,7 +35,7 @@ stdt<-date()
 \begin{frame}
 	\title{\pkgname}
 	\subtitle{Efficient Jonckheere-Terpstra Test Statistics}
-	\date{2016-06-14}
+	\date{2016-06-15}
 	\titlepage
 \end{frame}
 

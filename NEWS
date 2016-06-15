@@ -1,6 +1,10 @@
+jtGWAS v1.3 (Release date: 2016-06-15)
+============
+* Fix a bug that cause error for OpenMP in solaris system.
+
 jtGWAS v1.2 (Release date: 2016-06-14)
 =============
-* Fix a bug the cause stack overflow error in jtGWASmp.cpp and jtGWAS.cpp files
+* Fix a bug the cause stack overflow error in jtGWASmp.cpp and jtGWAS.cpp files.
 
 jtGWAS v1.1 (Release date: 2016-06-10)
 =============
