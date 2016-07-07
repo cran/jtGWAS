@@ -1,3 +1,7 @@
+jtGWAS v1.4 (Release date: 2016-07-07)
+============
+*Fix an error when the input G matrix has NAs, and other bug fixes.
+
 jtGWAS v1.3 (Release date: 2016-06-15)
 ============
 * Fix a bug that cause error for OpenMP in solaris system.

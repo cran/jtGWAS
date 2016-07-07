@@ -32,7 +32,7 @@ Rcpp::List jtGWAS(Rcpp::NumericMatrix X, Rcpp::NumericMatrix Y,
 {	
 	int 	gTypes 		= 0;
 	long  	gSnips 		= Y.ncol();	// number of gene snips
-	long  	numPat 		= X.nrow();	// number of patients
+	long  	numPatWithNA= X.nrow();	// number of patients
 	int 	numMarker 	= X.ncol();	// number of makers(genes) same as geneSnips
 
 	Rcpp::NumericMatrix gSnipID(outItemNo,numMarker);
@@ -65,7 +65,6 @@ Rcpp::List jtGWAS(Rcpp::NumericMatrix X, Rcpp::NumericMatrix Y,
 
 	bool tieState;
 	long itor = 0;
-	long pid  = 0;
 
 	long long nonEqCount = 0;
 	long long eqCount    = 0;
@@ -74,83 +73,122 @@ Rcpp::List jtGWAS(Rcpp::NumericMatrix X, Rcpp::NumericMatrix Y,
 	double mean = 0.00;
 	double var  = 0.00;
 	double    n   = 0;
-
+	
 	double Jstar = 0.00;		
 	
 	// Outer loop for markers.
 	for(int curMarker = 0; curMarker < numMarker; curMarker++){ 
-	        
-		int outcount = 1;	
-        std::list<JTscore> jTScoreTopN;// list to store top N scores for each marker
+		
 		//(1) obtain the tie informtion: number of tie group, and number of patients
 		//    in each tied group. Here we use unordered_map for this purpose.
 		// 	  Tie group information only depends on the curMarker, therefore handled
-		//    in the outer loop.
-		std::unordered_map<double, long> tieGroups; // patient number for tie groups
-		for(long pid = 0; pid < numPat; pid++){
-			tieGroups[X(pid, curMarker)]
-			= tieGroups[X(pid, curMarker)] + 1;
-        }
-		
-		// Terms in computing the varience that base on the tie. For all the gene sn-
-		// ips, this will be the same. It only depend on the marker. Therefore,
-		// compute in the outer loop.
-		termA3 = 0.00;
-		termB2 = 0.00;
-		termC2 = 0.00;
-
-		for(const auto &tieItor:tieGroups){
-			if(tieItor.second > 1){
-				termA3 += tieItor.second
-						*(tieItor.second - 1)
-						*(2*tieItor.second +5);
-
-				termB2 +=  tieItor.second
-						*(tieItor.second - 1)
-						*(tieItor.second - 2);
-
-				termC2 +=  tieItor.second
-					*(tieItor.second - 1);
-			}
+		//    in the outer loop. We precompute the ties and them for each SNP, we w-
+		//    ill kick out those SNPs are NA. 
+		std::unordered_map<double, long> tieGroups_pre; // patient number for tie groups
+		for(long pid = 0; pid < numPatWithNA; pid++){
+			if(!R_IsNA(X(pid, curMarker)))		
+				tieGroups_pre[X(pid,curMarker)]
+				= tieGroups_pre[X(pid,curMarker)] + 1;
 		}
-	
-		// Tie state
-		tieState  = termA3 > 0.00? true:false;
- 
+		
+		// Output size contorl for each marker
+		int outcount = 1;	
+        std::list<JTscore> jTScoreTopN;// list to store top N scores for each marker
+
 		// Inner loop for gene snips
 		for(long curGSnip = 0; curGSnip < gSnips; curGSnip++ ){	
+			
+			int NA_count =0;	
+			gTypes 	= 0;
+			
+			std::unordered_map<double, long> tieGroups = tieGroups_pre;	
+			std::set<double> gTypesSet;//use this map the check how many type geno.
+
+			for(int i =0; i < numPatWithNA; i++){
+				if(!R_IsNA(Y(i, curGSnip))&&!R_IsNA(X(i,curMarker))){
+					if (gTypesSet.find(Y(i,curGSnip)) == gTypesSet.end()){
+						gTypesSet.insert(Y(i,curGSnip));
+						gTypes ++;
+      				}
+				}
+				else{
+					if(!R_IsNA(X(i,curMarker)))
+						tieGroups[X(i,curMarker)] -= 1;
+					NA_count ++; 
+				}
+			}
+			
+			std::map<double, int> gTypesMap;
+			std::set<double>::iterator iter;
+
+			// sort the SNP id and put into a map.
+			int SNPmap = 0;
+			for(iter = gTypesSet.begin(); iter!= gTypesSet.end(); ++iter)
+			{
+				gTypesMap[*iter] = SNPmap;
+				SNPmap++;
+			}
+			
+			// adjust the patient number to exclude those with NA for their SNP type and marker level. 
+			int	numPat = numPatWithNA-NA_count;
+		
+			// Terms in computing the varience that base on the tie. For all the gene sn-
+			// ips, this will be the same. It only depend on the marker. Therefore,
+			// compute in the outer loop.
+			termA3 = 0.00;
+			termB2 = 0.00;
+			termC2 = 0.00;
+
+			for(const auto &tieItor:tieGroups){
+				if(tieItor.second > 1){
+					termA3 += tieItor.second
+							*(tieItor.second - 1)
+							*(2*tieItor.second +5);
+
+					termB2 +=  tieItor.second
+							*(tieItor.second - 1)
+							*(tieItor.second - 2);
+
+					termC2 +=  tieItor.second
+							*(tieItor.second - 1);
+				}	
+			}
+	
+			// Tie state
+			tieState  = termA3 > 0.00? true:false;
+ 
 			//(2) determine the number of a gene types for current gene snip this proces-
 			//    sing can be expensive, since it is in the geno snip loop that looped m-
 			//    any times. My current testing shows that this part cost 2% of the over-
 			//    all computation cost.
 			
-			gTypes 	= 0; 
-			std::unordered_set<int> gTypesSet;//use this map the check how many type geno.
-			for (long i = 0; i < numPat; i++){
-				if (gTypesSet.find(Y(i, curGSnip)) == gTypesSet.end()){
-					gTypesSet.insert(Y(i, curGSnip));
-					gTypes ++;
-      			}
-    		}	
 			
 			// only on type of geno is not able for performing JT test.  in the eval-
 			// uating this geno snip is skipped.
-			if(gTypes < 2)
+			if(gTypes < 2)	
+			{
+				if(!outTopNFlag)
+				{
+					JTJStar(curGSnip,curMarker)   = NA_REAL;
+                	jStatistic(curGSnip,curMarker) = NA_REAL;
+				}
 				continue;
-			
+			}
 			//(3) determine number of patients associated with each type of geno for the 
 			//    current gene snip 
 			vector<long> numPatGType(gTypes,0);
-			for(long i = 0; i < numPat; i++){
-				numPatGType[Y(i, curGSnip)]++;
+			for(long i = 0; i < numPatWithNA; i++){
+				if(!R_IsNA(Y(i,curGSnip))&&!R_IsNA(X(i, curMarker)))
+					numPatGType[gTypesMap[Y(i,curGSnip)]]++;
     		}
+			
 			// Test if certain geno type for this gene snip has unsignificant patient 
 			// number, if so this geno snip is skipped.
-			for(unsigned int i = 0; i < numPatGType.size(); i++)
-			{
-				if(numPatGType[i]/numPat < 0.05||numPatGType[i]/numPat > 0.95)
-					continue;	
-			}
+			//for(unsigned int i = 0; i < numPatGType.size(); i++)
+			//{
+			//	if(numPatGType[i]/numPat < 0.05||numPatGType[i]/numPat > 0.95)
+			//		continue;	
+			//}
 	        
 			//(4) create a index array to specify the patient ID that associated certain
 			//    geno type. For a specified geno type, the patient ID is not sorted or 
@@ -162,20 +200,19 @@ Rcpp::List jtGWAS(Rcpp::NumericMatrix X, Rcpp::NumericMatrix Y,
 			//    rithm.
 			vector<long> gTypePatInd(numPat,0);
 			itor = 0; 	//iterator for asign values to the index vector
-			pid  = 0; 	//patient ID iterator
+			
 			for(int genoType = 0; genoType < gTypes; genoType++){
-				pid = 0; 	// reset patient ID after patient ID of a genoType
-					 		// is put into the index vector.
-				for (long j = 0; j < numPat; j++){
-					if(Y(pid, curGSnip) == genoType){ 	//check pid for each geno type
-						gTypePatInd[itor] = pid;  		//asign the index
-						itor++; 		  				//update asigning iterator
-        			}				 
-					pid++; 		//update checking itorator
+				for (long j = 0; j < numPatWithNA; j++){
+					if(!R_IsNA(X(j,curMarker)) && !R_IsNA(Y(j,curGSnip))){
+						if( gTypesMap[Y(j,curGSnip)] == genoType ){ 	
+							gTypePatInd[itor] = j;  		//asign the index
+							itor++; 		  				//update asigning iterator
+        				}
+					}
      			}
     		}
-	
-    		//(5) Scan and implicitly construct for the Mann-Whitney count.
+    		
+			//(5) Scan and implicitly construct for the Mann-Whitney count.
 			//	  Here we do not directly perform comparision for the Mann-Whitney count.
 			//	  Indeed, the marker level for each geno types are sorted before compari-
 			// 	  sion, such that the cost of algorithm complexity is reduced from O(N^2) 
@@ -202,7 +239,7 @@ Rcpp::List jtGWAS(Rcpp::NumericMatrix X, Rcpp::NumericMatrix Y,
 					eqCount += pairCom[1];
 					tmpItor = tmpItor + numPatGType[genoType];
 			}
-
+			
 			// mean value ,and varience of J
             mean = 0.00;
 			var  = 0.00;
@@ -225,8 +262,9 @@ Rcpp::List jtGWAS(Rcpp::NumericMatrix X, Rcpp::NumericMatrix Y,
 							*  numPatGType[i]
 							* (2*numPatGType[i]+3);
 				}
-				var = (termA1 - termA2)/72; }else{
-					// If there is tie, the tie case JT test score expression is used.
+				var = (termA1 - termA2)/72; 
+			}else{
+				// If there is tie, the tie case JT test score expression is used.
 				//termA, termB, termC;
 				termA2 = 0.00, termB1 = 0.00, termC1 = 0.00;
 
@@ -255,9 +293,8 @@ Rcpp::List jtGWAS(Rcpp::NumericMatrix X, Rcpp::NumericMatrix Y,
 			}
 			
 			// Compute the statistics Jstar.
-			Jstar = 0.00;
-			Jstar =  ( nonEqCount + 0.5*eqCount - mean)/sqrt(var);
-				
+			Jstar = ( nonEqCount + 0.5*eqCount - mean)/sqrt(var);
+			
 			// Store the Jstat value and in euqal count for current marker and current g-
 			// ene snip
 //			JTJStar[curGSnip][curMarker] = Jstar;
@@ -271,14 +308,12 @@ Rcpp::List jtGWAS(Rcpp::NumericMatrix X, Rcpp::NumericMatrix Y,
 			}
 			JTscore js(Jstar, nonEqCount+0.5*eqCount, curGSnip);			
            	if (outcount <= outItemNo){ // populate up the result list before droping out
-			
 				outcount++;
                	it = jTScoreTopN.begin(); // reset the index to the beginning of the list
-			
 				if (jTScoreTopN.empty())
 				{
 					jTScoreTopN.insert(it,js); //when result list is empty, skip the find
-										   //insert position step.
+										       //insert position step.
 					continue;
 				}else{
                		//while((abs(Jstar) <= abs((*it).getJStar())) && (it!= jTScoreTopN.end()))
@@ -292,7 +327,6 @@ Rcpp::List jtGWAS(Rcpp::NumericMatrix X, Rcpp::NumericMatrix Y,
 						else
 							break;
 					}
-               
 					jTScoreTopN.insert(it,js); //insert the new result item
 					continue;
 				}
@@ -304,10 +338,8 @@ Rcpp::List jtGWAS(Rcpp::NumericMatrix X, Rcpp::NumericMatrix Y,
 							   // no update needed for this new result item
        		}else{ 
 				it = jTScoreTopN.begin(); // reset the index to the beginning of the list
-			
 				while(abs(Jstar) <= abs((*it).getJStar()))
 				{it++;}               // find the insert position
-                
 				jTScoreTopN.insert(it,js);  // insort the new result item
 				jTScoreTopN.pop_back();		// kick out the smallest element
 			}
@@ -322,19 +354,19 @@ Rcpp::List jtGWAS(Rcpp::NumericMatrix X, Rcpp::NumericMatrix Y,
    		{
        		JTJStar(i,curMarker)      = (*it).getJStar();
        		jStatistic(i,curMarker)   = (*it).getNonEqCount();
- 			gSnipID(i,curMarker)     = (*it).getGSnipID();      		
+ 			gSnipID(i,curMarker)      = (*it).getGSnipID();      		
 			i++ ;
    		}
 	}
     // Import the results to a master R list object to return to R.
     if(standardized)
-		JTtestRes["J"]  = JTJStar;
+		JTtestRes["J"]  	= JTJStar;
 	else
-    	JTtestRes["J"]  = jStatistic;
-	if(outTopNFlag == true)
-		JTtestRes["gSnipID"]	= gSnipID;
-	return(JTtestRes);
-
+    	JTtestRes["J"]  	= jStatistic;
 	
+	if(outTopNFlag == true)
+		JTtestRes["gSnipID"]= gSnipID;
+	
+	return(JTtestRes);
 }
 

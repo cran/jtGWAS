@@ -35,7 +35,7 @@ stdt<-date()
 \begin{frame}
 	\title{\pkgname}
 	\subtitle{Efficient Jonckheere-Terpstra Test Statistics}
-	\date{2016-06-15}
+	\date{2016-07-07}
 	\titlepage
 \end{frame}
 
@@ -72,6 +72,7 @@ Function aguments:\\
 	\item[\texttt{numThreads}:] Number of threads to use for parallel computation. The default value is 1 (sequential computation).
 	\item[\texttt{standardized}:] A boolean to specify whether to return standardized statistics or non-standardized statistics. The default value is \texttt{TRUE}, returning standardized statistics.
 \end{description}
+Users may wish to consider the \texttt{dplyr::recode()} function for converting non-numeric group indices into ordinal values for argument \texttt{G}.
 \end{frame}
 
 

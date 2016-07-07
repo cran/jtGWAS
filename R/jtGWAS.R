@@ -1,7 +1,11 @@
 jtGWAS <- function(X, G, outTopN = 15L, numThreads = 1L, standardized = TRUE) {
 	markerNames <- colnames(X)
 	SNPNames <- colnames(G)
-
+	
+	if(!is.numeric(G))
+	{
+		stop("Non-numerical matrix for G encounted!")
+	}
 	# provide default col and row names for the data frame if not provided.
     if (is.null(markerNames))
         markerNames <- paste("Mrk:", 1:ncol(X), sep="")
