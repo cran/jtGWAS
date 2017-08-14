@@ -1,14 +1,14 @@
-9ae54589dae09eaab59074d295e7d140 *DESCRIPTION
+cb2dc862fcb1efce1971f6ee7777f4e4 *DESCRIPTION
 eb6a6c594e3ef2a489700ae98ee9c835 *NAMESPACE
-218eed4d38d458bfb44e8c78c2e3387a *NEWS
+270e5e16a8b7fcf319c6a047aad25510 *NEWS
 fe0ea6d332a2b816db8472992631eca0 *R/jtGWAS.R
 237b1bdf792944ee23a5aa662b703a65 *R/pvalues.R
 26eaf7c970f0a95c61bd86f267499c7c *R/summary.jtGWAS.R
-300cc5b0d2ecd96da08033587fe9a167 *build/vignette.rds
+db5805ac4bde5db1b88f910a91632669 *build/vignette.rds
 031ea1f466374dc98b2244aeae6c2382 *inst/doc/jtGWAS.R
-2d4a9100fe9c9dee404a35952b6c385a *inst/doc/jtGWAS.Rnw
-493508c0254826dbd4b516c005a0c2a5 *inst/doc/jtGWAS.pdf
-efde316d7d26d21ba35c39e479256ea7 *man/jtGWAS-package.Rd
+bafe523e11344855243be94dfb83e48d *inst/doc/jtGWAS.Rnw
+a33115812636a8484e1d91435f1c4b87 *inst/doc/jtGWAS.pdf
+3a0efd203cf4a0e89a618e00ff67a547 *man/jtGWAS-package.Rd
 d6b176f21b70c176faa7f54ced11bee4 *man/jtGWAS.Rd
 75b8d171251ed6b9f2c0c9cba9a77f4e *man/pvalues.Rd
 e5ead3f265e3e612c2b2d7271b43270f *man/summary.jtGWAS.Rd
@@ -22,4 +22,4 @@ ed91a297335d0a4456a0210b4e9ccb41 *src/jtGWAS.cpp
 60539383efde0fb35a411f61ba64bc13 *src/jtGWASmp.cpp
 e23d0945cfffee83b7ba754282ec87cc *src/pairCompare.h
 75a4c4b43ccb5257ebd380f7097159e2 *src/pairCompareMP.h
-2d4a9100fe9c9dee404a35952b6c385a *vignettes/jtGWAS.Rnw
+bafe523e11344855243be94dfb83e48d *vignettes/jtGWAS.Rnw

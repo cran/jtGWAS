@@ -1,3 +1,7 @@
+jtGWAS v1.5.1 (Release date: 2017-02-20)
+============
+* Fix a font error on texlive 2017 for vignettes file
+
 jtGWAS v1.5 (Release date: 2017-02-20)
 ============
 * Fix a bug that generate NOTE at R 3.4 
